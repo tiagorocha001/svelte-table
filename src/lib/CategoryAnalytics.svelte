@@ -1,7 +1,7 @@
 <script>
   let { transactions } = $props();
 
-  const categoryData = $derived(() => {
+  const categoryData = $derived.by(() => {
     const data = {};
     
     transactions.forEach(transaction => {

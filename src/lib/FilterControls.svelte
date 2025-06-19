@@ -3,9 +3,10 @@
   import { transactionStore } from './stores/transactionStore.js';
   import { categories } from './utils/categories.js';
 
-  const allCategories = $derived(() => {
+  // Fix: Access the store correctly (it's just an array, not .transactions)
+  const allCategories = $derived.by(() => {
     const usedCategories = new Set();
-    transactionStore.transactions.forEach(t => {
+    $transactionStore.forEach(t => {
       if (t.category) usedCategories.add(t.category);
     });
     return Array.from(usedCategories).sort();
@@ -14,36 +15,69 @@
   function clearFilters() {
     filterStore.reset();
   }
-  console.log("filterStore", filterStore)
+
+  // Event handlers that use the store's setter methods
+  function handleStartDateChange(event) {
+    const currentRange = $filterStore.dateRange;
+    filterStore.setDateRange({ 
+      start: event.target.value, 
+      end: currentRange.end 
+    });
+  }
+
+  function handleEndDateChange(event) {
+    const currentRange = $filterStore.dateRange;
+    filterStore.setDateRange({ 
+      start: currentRange.start, 
+      end: event.target.value 
+    });
+  }
+
+  function handleCategoryChange(event) {
+    filterStore.setSelectedCategory(event.target.value);
+  }
+
+  function handleSearchChange(event) {
+    filterStore.setSearchTerm(event.target.value);
+  }
 </script>
 
 <div class="bg-white p-6 rounded-lg shadow">
   <h2 class="text-lg font-medium text-gray-900 mb-4">Filters</h2>
   
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <!-- Date Range -->
+    <!-- Date Range Start -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+      <label for="start-date" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
       <input 
+        id="start-date"
         type="date" 
         class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        value={$filterStore.dateRange.start}
+        onchange={handleStartDateChange}
       />
     </div>
     
+    <!-- Date Range End -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+      <label for="end-date" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
       <input 
+        id="end-date"
         type="date" 
         class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        value={$filterStore.dateRange.end}
+        onchange={handleEndDateChange}
       />
     </div>
     
     <!-- Category Filter -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+      <label for="category-select" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
       <select 
+        id="category-select"
         class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        bind:value={filterStore.selectedCategory}
+        value={$filterStore.selectedCategory}
+        onchange={handleCategoryChange}
       >
         <option value="all">All Categories</option>
         <option value="uncategorized">Uncategorized</option>
@@ -55,12 +89,14 @@
     
     <!-- Search -->
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Search Description</label>
+      <label for="search-input" class="block text-sm font-medium text-gray-700 mb-1">Search Description</label>
       <input 
+        id="search-input"
         type="text" 
         placeholder="Search transactions..."
         class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        bind:value={filterStore.searchTerm}
+        value={$filterStore.searchTerm}
+        oninput={handleSearchChange}
       />
     </div>
   </div>

@@ -6,7 +6,7 @@
   let sortField = $state('date');
   let sortDirection = $state('desc');
 
-  const sortedTransactions = $derived(() => {
+  const sortedTransactions = $derived.by(() => {
     const sorted = [...transactions].sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
@@ -24,7 +24,7 @@
       return 0;
     });
     
-    return sorted;
+    return transactions;
   });
 
   function handleSort(field) {
